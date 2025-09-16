@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UMEA Fikir Botu v10.0 (Güvenli)</title>
+    <style>
+        body { background-color: #000000; color: #00FF00; font-family: 'Courier New', Courier, monospace; margin: 0; overflow: hidden; }
+        .main-container { display: flex; justify-content: center; align-items: center; height: 100vh; gap: 20px; padding: 20px; box-sizing: border-box; }
+        .sidebar { flex-basis: 25%; height: 90vh; background-color: #000000; border: 2px solid #224422; padding: 15px; box-sizing: border-box; overflow: hidden; display: flex; flex-direction: column; }
+        .sidebar-content { font-size: 14px; line-height: 1.4; white-space: pre-wrap; word-wrap: break-word; animation: flicker 0.15s infinite alternate; text-shadow: 0 0 5px #00ff00, 0 0 7px #00ff00; }
+        .blinking-text { animation: blink 1.5s linear infinite; }
+        @keyframes flicker { 0% { opacity: 0.95; } 100% { opacity: 1; } }
+        @keyframes blink { 50% { opacity: 0.3; } 100% { opacity: 1; } }
+        .window { width: 750px; height: 90vh; max-width: 50%; border: 2px solid #FFFFFF; background-color: #0000AA; box-shadow: 5px 5px 0px #222222; display: flex; flex-direction: column; z-index: 10; flex-shrink: 0; }
+        .title-bar { background-color: #FFFFFF; color: #0000AA; padding: 5px; font-weight: bold; text-align: center; flex-shrink: 0; }
+        .content { color: #FFFF00; padding: 15px; display: flex; flex-direction: column; flex-grow: 1; overflow: hidden; }
+        #response-display { color: #FFFFFF; background-color: #000000; padding: 15px; border: 1px solid #555555; flex-grow: 1; overflow-y: auto; white-space: pre-wrap; word-wrap: break-word; margin-bottom: 15px; }
+        .input-area { flex-shrink: 0; display: flex; gap: 10px; align-items: center; }
+        #prompt-input { width: 100%; flex-grow: 1; padding: 8px; background-color: #222222; color: #FFFFFF; border: 1px solid #FFFFFF; font-family: 'Courier New', Courier, monospace; font-size: 16px; }
+        button { background-color: #CCCCCC; color: #000000; border: 1px solid #FFFFFF; padding: 8px 15px; font-family: 'Courier New', Courier, monospace; font-size: 16px; cursor: pointer; box-shadow: 2px 2px 0px #000000; }
+        .footer-bar { background-color: #FFFFFF; color: #0000AA; padding: 3px; font-size: 12px; text-align: right; flex-shrink: 0; }
+        @media (max-width: 800px) {
+            .main-container { flex-direction: column; padding: 0; gap: 0; }
+            .sidebar { display: none; }
+            .window { width: 100%; max-width: 100%; height: 100dvh; border: none; box-shadow: none; }
+            #prompt-input { padding: 12px; }
+            button { padding: 12px 18px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div class="sidebar left-sidebar"><pre class="sidebar-content">C:\>nostalgia.bat...</pre></div>
+        <div class="window">
+            <div class="title-bar">[■] UMEA Fikir Botu v10.0 (Güvenli Mod)</div>
+            <div class="content">
+                <p style="margin: 0 0 5px 0;">> UMEA DİYOR Kİ:</p>
+                <pre id="response-display">Güvenli bağlantı kuruldu. Sistem hazır.</pre>
+                <div class="input-area">
+                    <input type="text" id="prompt-input" placeholder="UMEA'ya bir şeyler yaz...">
+                    <button id="submit-button" onclick="getAiResponse()">GÖNDER</button>
+                </div>
+            </div>
+            <div class="footer-bar">F1 YARDIM | ESC ÇIKIŞ</div>
+        </div>
+        <div class="sidebar right-sidebar"><pre class="sidebar-content">Beni satın almaya mı geldiniz? ... <span class="blinking-text">...böbürlenmeyin.</span></pre></div>
+    </div>
+
+    <script>
+        const apiUrl = '/api/generate'; // İstek artık Google'a değil, kendi sunucumuza gidiyor
+        const promptInput = document.getElementById('prompt-input');
+        const responseDisplay = document.getElementById('response-display');
+        const submitButton = document.getElementById('submit-button');
+        async function getAiResponse() {
+            const userPrompt = promptInput.value;
+            if (!userPrompt || submitButton.disabled) return;
+            submitButton.disabled = true;
+            responseDisplay.textContent = "UMEA işliyor, lütfen biraz bekle...";
+            promptInput.disabled = true;
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: userPrompt })
+                });
+                const data = await response.json();
+                if (!response.ok) { throw new Error(data.error || 'Sunucuda bir hata oluştu.'); }
+                responseDisplay.textContent = data.text;
+                promptInput.value = "";
+            } catch (error) {
+                console.error("Hata:", error);
+                responseDisplay.textContent = `Bir sorun çıktı, lütfen tekrar dene.\n\nDetay: ${error.message}`;
+            } finally {
+                submitButton.disabled = false;
+                promptInput.disabled = false;
+                promptInput.focus();
+            }
+        }
+        promptInput.addEventListener("keyup", function(event) { if (event.key === "Enter") { event.preventDefault(); getAiResponse(); } });
+    </script>
+</body>
+</html>
